@@ -2,8 +2,12 @@ import java.io.*;
 import java.util.*;
 
 class Main {
-    public static void main(String args[]) {
+    public static void main(String args[]) throws IOException{
         System.out.println("Hello");
+
+        CSVReader.readCSV();
+
+        System.out.println(TransactionManager.balances.get("UserA").get("UserC"));
     }
 }
 
@@ -12,11 +16,15 @@ class User {
     private String userName;
     private double balance;
 
-    static ArrayList<User> users;
+    private static ArrayList<User> usersList;
 
-    // Define getters
-    double getBalance() {
-        return balance;
+    static {
+        usersList = new ArrayList<>();
+    }
+
+    User(String userID) {
+        this.userID = userID;
+        this.addUser();
     }
 
     String getUserID() {
@@ -27,13 +35,31 @@ class User {
         return userName;
     }
 
-    // Define setters
+    double getBalance() {
+        return balance;
+    }
+
+    static ArrayList<User> getUsersList() {
+        return usersList;
+    }
+
+    void setUserID(String userID) {
+        this.userID = userID;
+    }
+
+    void setUserName(String userName) {
+        this.userName = userName;
+    }
+
+    void setBalance(double balance) {
+        this.balance = balance;
+    }
 
     // define constructors
 
-    // private void addUser(){
-    // //
-    // }
+    private void addUser() {
+        usersList.add(this);
+    }
 
     // removeUser
 
@@ -41,27 +67,24 @@ class User {
 
 class Split {
 
-    //define appropriate variables
-    HashMap<String,Double> userSplit;
+    // define appropriate variables
+    HashMap<String, Double> userSplit;
 
-    Split(String paidUserID, double amount, ArrayList<String> owedUsers, String type, ArrayList<Double> values){
-        if(type.equalsIgnoreCase("exact")){
-            for(int i=0;i<owedUsers.size();i++){
-                userSplit.put(owedUsers.get(i),values.get(i));
+    Split(String paidUserID, double amount, ArrayList<String> owedUsers, String type, ArrayList<Double> values) {
+        if (type.equalsIgnoreCase("exact")) {
+            for (int i = 0; i < owedUsers.size(); i++) {
+                userSplit.put(owedUsers.get(i), values.get(i));
             }
-        }
-        else if(type.equalsIgnoreCase("percent")){
-             for(int i=0;i<owedUsers.size();i++){
-                userSplit.put(owedUsers.get(i),amount*values.get(i)/100);
+        } else if (type.equalsIgnoreCase("percent")) {
+            for (int i = 0; i < owedUsers.size(); i++) {
+                userSplit.put(owedUsers.get(i), amount * values.get(i) / 100);
             }
 
-        }
-        else if(type.equalsIgnoreCase("equal")){  
-            for(int i=0;i<owedUsers.size();i++){
-                userSplit.put(owedUsers.get(i),amount/owedUsers.size());
+        } else if (type.equalsIgnoreCase("equal")) {
+            for (int i = 0; i < owedUsers.size(); i++) {
+                userSplit.put(owedUsers.get(i), amount / owedUsers.size());
             }
-        }
-        else {
+        } else {
             System.out.println("Invalid split type, no changes made !");
         }
     }
@@ -71,11 +94,11 @@ class Split {
 class TransactionManager {
 
     // store all balances
-    private static HashMap<String, HashMap<String, Double>> balances;
+    static HashMap<String, HashMap<String, Double>> balances;
 
     // addTransaction(Split) //update "balances"
 
-    void setBalances(HashMap<String, HashMap<String, Double>> balances) {
+    static void setBalances(HashMap<String, HashMap<String, Double>> balances) {
         TransactionManager.balances = balances;
     }
 }
@@ -113,16 +136,31 @@ class CSVReader {
             return;
         } else {
             String header[] = line.split(",");
+            for (int i = 2; i < header.length; ++i) {
+                new User(header[i]);
+            }
         }
+
+        int index = 0;
+        ArrayList<User> usersList = User.getUsersList();
+        while ((line = fileReader.readLine()) != null) {
+            // A row looks like this: <userID>,<userName>,<owedToUserA>,<owedToUserB>,...
+            String lineContent[] = line.split(",");
+            usersList.get(index).setUserName(lineContent[1]);
+            String userID = lineContent[0];
+
+            HashMap<String, Double> personalBalanceHashMap = new HashMap<>();
+            for (int i = 0; i < usersList.size(); ++i) {
+                personalBalanceHashMap.put(usersList.get(i).getUserID(), Double.valueOf(lineContent[i + 2]));
+            }
+
+            balanceMap.put(userID, personalBalanceHashMap);
+        }
+
+        TransactionManager.setBalances(balanceMap);
     }
-
-    // static method to read CSV and create the balances hashmap
-
 }
 
 class CSVWriter {
-    // CSVWriter
-
-    // update CSV file (addition and deletion happens in hashmap)
-
+    
 }
