@@ -42,29 +42,38 @@ class User {
 class Split {
 
     //define appropriate variables
-    HashMap<String,Double> userSplit;
+    private HashMap<String,Double> userSplit;
+    private String paidUserID;
+
+    HashMap<String,Double> getSplit(){
+        return userSplit;
+    }
+    String getPaidUserID(){
+        return paidUserID;
+    }
 
     Split(String paidUserID, double amount, ArrayList<String> owedUsers, String type, ArrayList<Double> values){
+        this.paidUserID = paidUserID;
         if(type.equalsIgnoreCase("exact")){
             for(int i=0;i<owedUsers.size();i++){
-                userSplit.put(owedUsers.get(i),values.get(i));
+                userSplit.put(owedUsers.get(i),-values.get(i));
             }
         }
         else if(type.equalsIgnoreCase("percent")){
              for(int i=0;i<owedUsers.size();i++){
-                userSplit.put(owedUsers.get(i),amount*values.get(i)/100);
+                userSplit.put(owedUsers.get(i),-amount*values.get(i)/100);
             }
 
         }
         else if(type.equalsIgnoreCase("equal")){  
             for(int i=0;i<owedUsers.size();i++){
-                userSplit.put(owedUsers.get(i),amount/owedUsers.size());
+                userSplit.put(owedUsers.get(i),-amount/owedUsers.size());
             }
         }
         else {
             System.out.println("Invalid split type, no changes made !");
         }
-    }
+    } 
 
 }
 
@@ -75,8 +84,23 @@ class TransactionManager {
 
     // addTransaction(Split) //update "balances"
 
-    void setBalances(HashMap<String, HashMap<String, Double>> balances) {
+    static void setBalances(HashMap<String, HashMap<String, Double>> balances) {
         TransactionManager.balances = balances;
+    }
+
+    void updateBalances(Split sp){
+        HashMap<String,Double> split = sp.getSplit();
+        String paidUserID = sp.getPaidUserID();
+        for(Map.Entry<String, Double> splitEntry : split.entrySet()){
+            // splitEntry is a HashMap received from Split with key owedUserID and value the amount owed
+            String owedUserID = splitEntry.getKey();
+            double owedAmount = splitEntry.getValue();
+            double newOwedAmount = balances.get(owedUserID).get(paidUserID)-owedAmount;
+            double newLentAmount = -newOwedAmount;
+            
+            balances.get(owedUserID).put(paidUserID, newOwedAmount);
+            balances.get(paidUserID).put(paidUserID, newLentAmount);
+        }
     }
 }
 
