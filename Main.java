@@ -33,21 +33,47 @@ class User {
 
     //removeUser
 
-
 }
 
 class Split {
+
     //define appropriate variables
-    // define two constructors: one for equal, and other for exact and percent
+    HashMap<String,Double> userSplit;
+
+    Split(String paidUserID, double amount, ArrayList<String> owedUsers, String type, ArrayList<Double> values){
+        if(type.equalsIgnoreCase("exact")){
+            for(int i=0;i<owedUsers.size();i++){
+                userSplit.put(owedUsers.get(i),values.get(i));
+            }
+        }
+        else if(type.equalsIgnoreCase("percent")){
+             for(int i=0;i<owedUsers.size();i++){
+                userSplit.put(owedUsers.get(i),amount*values.get(i)/100);
+            }
+
+        }
+        else if(type.equalsIgnoreCase("equal")){  
+            for(int i=0;i<owedUsers.size();i++){
+                userSplit.put(owedUsers.get(i),amount/owedUsers.size());
+            }
+        }
+        else {
+            System.out.println("Invalid split type, no changes made !");
+        }
+    }
 
 }
 
 class TransactionManager {
 
     //store all balances
-    static HashMap<String,HashMap<String,Double>> balances; 
+    static HashMap<String,HashMap<String,Double>> balances;
+
+
 
     // addTransaction(Split) //update "balances"
+
+    // add function to settle expenses
 }
 
 class CSVReader{
