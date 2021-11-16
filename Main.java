@@ -104,7 +104,6 @@ class TransactionManager {
 }
 
 class CSVReader {
-    // import the csv file having the balances
     static BufferedReader fileReader = null;
 
     private static void instantiateReader() {
@@ -114,6 +113,7 @@ class CSVReader {
             try {
                 File balancesFile = new File("./Balances.csv");
                 balancesFile.createNewFile();
+                fileReader = new BufferedReader(new FileReader("./Balances.csv"));
             } catch (IOException IOErr) {
                 IOErr.printStackTrace();
                 // EDIT LATER
@@ -158,6 +158,8 @@ class CSVReader {
         }
 
         TransactionManager.setBalances(balanceMap);
+
+        fileReader.close();
     }
 }
 
