@@ -4,14 +4,140 @@ import java.util.*;
 class Main {
     public static void main(String args[]) throws IOException {
         CSVReader.readCSV("balances.csv");
-        // Menu
+        Scanner sc = new Scanner(System.in);
 
-        // List Users
-        // Add Users
-        // Create Expense
-        // Settle Balance
-        // Show Balances
-        // Remove Users
+        // Menu
+        Boolean exit = false;
+        while (!exit) {
+            System.out.println("Main Menu:");
+            System.out.println("1. List Users");
+            System.out.println("2. Add Users");
+            System.out.println("3. Create Expense");
+            System.out.println("4. Settle Balance");
+            System.out.println("5. Show Balances");
+            System.out.println("6. Remove Users");
+            System.out.println("7. Exit Menu");
+
+            int input;
+            while (true) {
+                try {
+                    input = sc.nextInt();
+                    break;
+                } catch (InputMismatchException err) {
+                    System.out.println("Please enter a valid option.");
+                }
+            }
+
+            switch (input) {
+            case 1:
+                System.out.printf("%-15s%-15s\n", "UserID", "Username");
+                for (User user : User.getUsersList()) {
+                    System.out.printf("%-15s%-15s\n", user.getUserID(), user.getUserName());
+                }
+                break;
+            case 2:
+                System.out.println("What is the name of the new user?");
+                String newUserName = sc.next();
+                String newUserID = User.newUser(newUserName);
+
+                System.out.printf("New User - %s - created with User ID %s\n", newUserName, newUserID);
+                break;
+            case 3:
+                break;
+            case 4:
+                System.out.println("Enter the User IDs of the two people who are settling their balance:");
+
+                String user1 = sc.next();
+                String user2 = sc.next();
+
+                if (TransactionManager.balances.containsKey(user1) && TransactionManager.balances.containsKey(user2)) {
+                    TransactionManager.balances.get(user1).put(user2, 0.0);
+                    TransactionManager.balances.get(user2).put(user1, 0.0);
+
+                    // Updating the CSV File
+                    CSVWriter.writeCSV("Balances.csv");
+                } else {
+                    System.out.println("Invalid User IDs.");
+                }
+
+                break;
+            case 5:
+                System.out.println("1. Show balances for a single user.");
+                System.out.println("2. Show balances for all users.");
+
+                int inputForCase5;
+                while (true) {
+                    try {
+                        inputForCase5 = sc.nextInt();
+                        break;
+                    } catch (InputMismatchException err) {
+                        System.out.println("Please enter a valid option.");
+                    }
+                }
+
+                switch (inputForCase5) {
+                    case 1: 
+                        System.out.println("Enter the relevant User ID:");
+                        String userID = sc.next();
+
+                        if (TransactionManager.balances.containsKey(userID)) {
+                            User reqUser = null;
+                            for (User user : User.getUsersList()) {
+                                if (user.getUserID().equals(userID)) {
+                                    reqUser = user;
+                                }
+                            }
+                            reqUser.showAllBalances();
+                        } else {
+                            System.out.println("Invalid User ID.");
+                        }
+                        break;
+                    case 2:
+                        System.out.printf("%-15s%-15s%-15s\n", "UserID", "Username", "Balance");
+                        for (User user : User.getUsersList()) {
+                            System.out.printf("%-15s%-15s%-15s\n", user.getUserID(), user.getUserName(), user.getBalance());
+                        } 
+                        break;
+                    default:
+                        System.out.println("Invalid option.");
+                }
+                break;
+            case 6:
+                System.out.println("Enter the User ID of the user to be removed:");
+                String userID = sc.next();
+
+                if (TransactionManager.balances.containsKey(userID)) {
+                    User usr = null;
+                    for (User user : User.getUsersList()) {
+                        if (user.getUserID().equals(userID)) {
+                            usr = user;
+                        }
+                    }
+
+                    System.out.printf("Are you sure you want to remove %s? (Y/N)\n", usr.getUserName());
+                    
+                    String yesNo = sc.next();
+                    if (yesNo.equalsIgnoreCase("y")) {
+                        User.removeUser(userID);
+                    } else if (yesNo.equalsIgnoreCase("n")) {
+                        break;
+                    } else {
+                        System.out.println("Invalid option.");
+                    }
+                }
+                break;
+            case 7:
+                exit = true;
+                break;
+            default:
+                System.out.println("Invalid option.");
+                break;
+
+            }
+        }
+
+        sc.close();
+        CSVWriter.writeCSV("Balances.csv");
 
     }
 }
@@ -50,11 +176,15 @@ class User {
 
     void showAllBalances() {
         for (String user : TransactionManager.balances.keySet()) {
+            if (userID.equals(user)) {
+                continue;
+            }
+
             double balAmt = TransactionManager.balances.get(userID).get(user);
             if (balAmt > 0) {
-                System.out.printf("User %s owes %s an amount of %d \n", user, userID, balAmt);
+                System.out.printf("User %s owes %s an amount of %f \n", user, userID, balAmt);
             } else if (balAmt < 0) {
-                System.out.printf("User %s owes %s an amount of %d \n", userID, user, balAmt);
+                System.out.printf("User %s owes %s an amount of %f \n", userID, user, -balAmt);
             } else {
                 System.out.printf("User %s and %s are settled up \n", userID, user);
             }
@@ -84,7 +214,7 @@ class User {
         return String.format("%05d", newUserID);
     }
 
-    static void newUser(String userName) {
+    static String newUser(String userName) {
         String userID = generateUserID();
         User userObj = new User(userID);
         userObj.setBalance(0.0);
@@ -93,6 +223,8 @@ class User {
 
         TransactionManager.newUser(userID);
         CSVWriter.writeCSV("Balances.csv");
+
+        return userID;
     }
 
     private void addUser() {
@@ -102,6 +234,15 @@ class User {
     static void removeUser(String userID) {
         // Removing the personal HashMap for the user
         TransactionManager.balances.remove(userID);
+
+        // Removing the user from the Users List
+        for (User user : usersList) {
+            if (user.getUserID().equals(userID)) {
+                usersList.remove(user);
+                break;
+            }
+        }
+        
 
         // Removing the entries for that user in others' HashMaps
         for (Map.Entry<String, LinkedHashMap<String, Double>> hashMapEntry : TransactionManager.balances.entrySet()) {
