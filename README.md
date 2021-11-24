@@ -1,2 +1,3 @@
 # Splitwise_Java
-Object Oriented Programming Project
+CS F213: Object Oriented Programming
+Course Project
