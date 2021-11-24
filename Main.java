@@ -8,7 +8,7 @@ class Main {
         CSVReader.readCSV("balances.csv");
 
         System.out.println(TransactionManager.balances.get("UserA").get("UserC"));
-        
+
         for (User user : User.getUsersList()) {
             System.out.println("UserID : " + user.getUserID() + " ; UserName : " + user.getUserName());
         }
@@ -60,6 +60,23 @@ class User {
 
     void setBalance(double balance) {
         this.balance = balance;
+    }
+
+    private static String generateUserID() {
+        int lastExistingID = Integer.parseInt(usersList.get(usersList.size() - 1).getUserID());
+        int newUserID = lastExistingID + 1;
+        return String.format("%05d", newUserID);
+    }
+
+    static void newUser(String userName) {
+        String userID = generateUserID();
+        User userObj = new User(userID);
+        userObj.setBalance(0.0);
+        userObj.setUserName(userName);
+        usersList.add(userObj);
+
+        TransactionManager.newUser(userID);
+        CSVWriter.writeCSV("Balances.csv");
     }
 
     private void addUser() {
@@ -128,11 +145,12 @@ class TransactionManager {
         TransactionManager.balances = balances;
     }
 
-    void updateBalances(Split sp) {
-        LinkedHashMap<String, Double> split = sp.getSplit();
+    static void updateBalances(Split sp) {
+        HashMap<String, Double> split = sp.getSplit();
         String paidUserID = sp.getPaidUserID();
         for (Map.Entry<String, Double> splitEntry : split.entrySet()) {
-            // splitEntry is a LinkedHashMap received from Split with key owedUserID and value the
+            // splitEntry is a LinkedHashMap received from Split with key owedUserID and
+            // value the
             // amount owed
             String owedUserID = splitEntry.getKey();
             double owedAmount = splitEntry.getValue();
@@ -140,7 +158,15 @@ class TransactionManager {
             double newLentAmount = -newOwedAmount;
 
             balances.get(owedUserID).put(paidUserID, newOwedAmount);
-            balances.get(paidUserID).put(paidUserID, newLentAmount);
+            balances.get(paidUserID).put(owedUserID, newLentAmount);
+        }
+    }
+
+    static void newUser(String userID) {
+        balances.put(userID, new LinkedHashMap<String, Double>());
+        for (String user : balances.keySet()) {
+            balances.get(user).put(userID, 0.0);
+            balances.get(userID).put(user, 0.0);
         }
     }
 }
@@ -246,7 +272,7 @@ class CSVWriter {
             fileWriter.printf("%s", uname);
 
             LinkedHashMap<String, Double> userBalanceMap = balanceEntry.getValue();
-            for(Map.Entry<String, Double> balance : userBalanceMap.entrySet()) {
+            for (Map.Entry<String, Double> balance : userBalanceMap.entrySet()) {
                 fileWriter.printf(",%f", balance.getValue());
             }
 
