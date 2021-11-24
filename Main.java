@@ -67,10 +67,17 @@ class Main {
                     type = "equal";
                     break;
                 case '2':
-                    type = "exact";
+                    double totAmount = 0.0;
                     System.out.println("Enter the amounts (space separated)");
                     for (int i = 0; i < n; i++) {
                         values.add(sc.nextDouble());
+                        totAmount += values.get(i);
+                    }
+                    if (totAmount == amount) {
+                        type = "exact";
+                    } else {
+                        System.out.println("Inconsistent amounts entered !");
+                        type = "";
                     }
                     break;
                 case '3':
