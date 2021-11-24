@@ -14,6 +14,7 @@ class Main {
         }
 
         CSVWriter.writeCSV("balances.csv");
+
     }
 }
 
@@ -96,13 +97,22 @@ class User {
         CSVWriter.writeCSV("Balances.csv");
     }
 
-    // define constructors
-
     private void addUser() {
         usersList.add(this);
     }
 
-    // removeUser
+    static void removeUser(String userID) {
+        // Removing the personal HashMap for the user
+        TransactionManager.balances.remove(userID);
+
+        // Removing the entries for that user in others' HashMaps
+        for (Map.Entry<String, LinkedHashMap<String, Double>> hashMapEntry : TransactionManager.balances.entrySet()) {
+            hashMapEntry.getValue().remove(userID);
+        }
+
+        // Updating CSV File
+        CSVWriter.writeCSV("Balances.csv");
+    }
 
 }
 
