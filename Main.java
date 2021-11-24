@@ -5,9 +5,15 @@ class Main {
     public static void main(String args[]) throws IOException {
         System.out.println("Hello");
 
-        CSVReader.readCSV();
+        CSVReader.readCSV("balances.csv");
 
         System.out.println(TransactionManager.balances.get("UserA").get("UserC"));
+
+        for (User user : User.getUsersList()) {
+            System.out.println("UserID : " + user.getUserID() + " ; UserName : " + user.getUserName());
+        }
+
+        CSVWriter.writeCSV("balances.csv");
     }
 }
 
@@ -69,7 +75,7 @@ class User {
         usersList.add(userObj);
 
         TransactionManager.newUser(userID);
-        CSVWriter.writeCSV('Balances.csv');
+        CSVWriter.writeCSV("Balances.csv");
     }
 
     // define constructors
@@ -85,10 +91,10 @@ class User {
 class Split {
 
     // define appropriate variables
-    private HashMap<String, Double> userSplit;
+    private LinkedHashMap<String, Double> userSplit;
     private String paidUserID;
 
-    HashMap<String, Double> getSplit() {
+    LinkedHashMap<String, Double> getSplit() {
         return userSplit;
     }
 
@@ -121,11 +127,11 @@ class Split {
 class TransactionManager {
 
     // store all balances
-    static HashMap<String, HashMap<String, Double>> balances;
+    static LinkedHashMap<String, LinkedHashMap<String, Double>> balances;
 
     // addTransaction(Split) //update "balances"
 
-    static void setBalances(HashMap<String, HashMap<String, Double>> balances) {
+    static void setBalances(LinkedHashMap<String, LinkedHashMap<String, Double>> balances) {
         TransactionManager.balances = balances;
     }
 
@@ -133,7 +139,8 @@ class TransactionManager {
         HashMap<String, Double> split = sp.getSplit();
         String paidUserID = sp.getPaidUserID();
         for (Map.Entry<String, Double> splitEntry : split.entrySet()) {
-            // splitEntry is a HashMap received from Split with key owedUserID and value the
+            // splitEntry is a LinkedHashMap received from Split with key owedUserID and
+            // value the
             // amount owed
             String owedUserID = splitEntry.getKey();
             double owedAmount = splitEntry.getValue();
@@ -146,7 +153,7 @@ class TransactionManager {
     }
 
     static void newUser(String userID) {
-        balances.put(userID, new HashMap<String, Double>());
+        balances.put(userID, new LinkedHashMap<String, Double>());
         for (String user : balances.keySet()) {
             balances.get(user).put(userID, 0.0);
             balances.get(userID).put(user, 0.0);
@@ -157,14 +164,14 @@ class TransactionManager {
 class CSVReader {
     static BufferedReader fileReader = null;
 
-    private static void instantiateReader() {
+    private static void instantiateReader(String fname) {
         try {
-            fileReader = new BufferedReader(new FileReader("./Balances.csv"));
+            fileReader = new BufferedReader(new FileReader(fname));
         } catch (FileNotFoundException fileErr) {
             try {
-                File balancesFile = new File("./Balances.csv");
+                File balancesFile = new File(fname);
                 balancesFile.createNewFile();
-                fileReader = new BufferedReader(new FileReader("./Balances.csv"));
+                fileReader = new BufferedReader(new FileReader(fname));
             } catch (IOException IOErr) {
                 IOErr.printStackTrace();
                 // EDIT LATER
@@ -172,13 +179,13 @@ class CSVReader {
         }
     }
 
-    static void readCSV() throws IOException {
+    static void readCSV(String fname) throws IOException {
         // Checking if fileReader has been already instantiated or not
         if (fileReader == null) {
-            instantiateReader();
+            instantiateReader(fname);
         }
 
-        HashMap<String, HashMap<String, Double>> balanceMap = new HashMap<>();
+        LinkedHashMap<String, LinkedHashMap<String, Double>> balanceMap = new LinkedHashMap<>();
 
         // Read header line
         String line = fileReader.readLine();
@@ -200,12 +207,14 @@ class CSVReader {
             usersList.get(index).setUserName(lineContent[1]);
             String userID = lineContent[0];
 
-            HashMap<String, Double> personalBalanceHashMap = new HashMap<>();
+            LinkedHashMap<String, Double> personalBalanceLinkedHashMap = new LinkedHashMap<>();
             for (int i = 0; i < usersList.size(); ++i) {
-                personalBalanceHashMap.put(usersList.get(i).getUserID(), Double.valueOf(lineContent[i + 2]));
+                personalBalanceLinkedHashMap.put(usersList.get(i).getUserID(), Double.valueOf(lineContent[i + 2]));
             }
 
-            balanceMap.put(userID, personalBalanceHashMap);
+            balanceMap.put(userID, personalBalanceLinkedHashMap);
+
+            index++;
         }
 
         TransactionManager.setBalances(balanceMap);
@@ -215,5 +224,51 @@ class CSVReader {
 }
 
 class CSVWriter {
+    static PrintWriter fileWriter = null;
 
+    private static void instantiateWriter(String fname) {
+        try {
+            fileWriter = new PrintWriter(new FileWriter(fname));
+        } catch (IOException err) {
+            System.out.println("IOException encountered when writing to CSV File");
+        }
+    }
+
+    static void writeCSV(String fname) {
+        // Checking if fileWriter has been already instantiated or not
+        if (fileWriter == null) {
+            instantiateWriter(fname);
+        }
+
+        // Write the header to the CSV file
+        Set<String> keys = TransactionManager.balances.keySet();
+        fileWriter.printf(",");
+        for (String key : keys) {
+            fileWriter.printf(",%s", key);
+        }
+        fileWriter.printf("\n");
+        // Write the rest of the content to the CSV file
+        for (Map.Entry<String, LinkedHashMap<String, Double>> balanceEntry : TransactionManager.balances.entrySet()) {
+            String userID = balanceEntry.getKey();
+            String uname = null;
+            fileWriter.printf("%s,", userID);
+
+            for (User user : User.getUsersList()) {
+                if (userID.equals(user.getUserID())) {
+                    uname = user.getUserName();
+                    break;
+                }
+            }
+            fileWriter.printf("%s", uname);
+
+            LinkedHashMap<String, Double> userBalanceMap = balanceEntry.getValue();
+            for (Map.Entry<String, Double> balance : userBalanceMap.entrySet()) {
+                fileWriter.printf(",%f", balance.getValue());
+            }
+
+            fileWriter.printf("\n");
+        }
+
+        fileWriter.close();
+    }
 }
