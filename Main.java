@@ -43,6 +43,55 @@ class Main {
                 System.out.printf("New User - %s - created with User ID %s\n", newUserName, newUserID);
                 break;
             case 3:
+                System.out.println("Enter the user ID (of person who paid):");
+                String paidUserID = sc.nextLine();
+                System.out.println("Enter the amount: ");
+                double amount = sc.nextDouble();
+                ArrayList<String> owedUsersList = new ArrayList<>();
+                System.out.println("Enter the number of users who will split:");
+                int n = sc.nextInt();
+                System.out.println("Enter their user ID(s) (space separated)");
+                for (int i = 0; i < n; i++) {
+                    owedUsersList.add(sc.next());
+                }
+                String type = "";
+                System.out.println("Enter the type of split:");
+                System.out.println("\1 for equal");
+                System.out.println("\2 for exact");
+                System.out.println("\3 for percentage");
+                char ch = sc.next().charAt(0);
+                ArrayList<Double> values = new ArrayList<Double>();
+
+                switch (ch) {
+                case '1':
+                    type = "equal";
+                    break;
+                case '2':
+                    type = "exact";
+                    System.out.println("Enter the amounts (space separated)");
+                    for (int i = 0; i < n; i++) {
+                        values.add(sc.nextDouble());
+                    }
+                    break;
+                case '3':
+                    System.out.println("Enter the amounts (space separated)");
+                    double totPercent = 0.0;
+                    for (int i = 0; i < n; i++) {
+                        values.add(sc.nextDouble());
+                        totPercent += values.get(i);
+                    }
+                    if (totPercent == 100.0) {
+                        type = "percent";
+                    } else {
+                        System.out.println("Invalid percentages entered !");
+                        type = "";
+                    }
+                    break;
+
+                }
+
+                Split sp = new Split(paidUserID, amount, owedUsersList, type, values);
+                TransactionManager.updateBalances(sp);
                 break;
             case 4:
                 System.out.println("Enter the User IDs of the two people who are settling their balance:");
@@ -76,30 +125,30 @@ class Main {
                 }
 
                 switch (inputForCase5) {
-                    case 1: 
-                        System.out.println("Enter the relevant User ID:");
-                        String userID = sc.next();
+                case 1:
+                    System.out.println("Enter the relevant User ID:");
+                    String userID = sc.next();
 
-                        if (TransactionManager.balances.containsKey(userID)) {
-                            User reqUser = null;
-                            for (User user : User.getUsersList()) {
-                                if (user.getUserID().equals(userID)) {
-                                    reqUser = user;
-                                }
-                            }
-                            reqUser.showAllBalances();
-                        } else {
-                            System.out.println("Invalid User ID.");
-                        }
-                        break;
-                    case 2:
-                        System.out.printf("%-15s%-15s%-15s\n", "UserID", "Username", "Balance");
+                    if (TransactionManager.balances.containsKey(userID)) {
+                        User reqUser = null;
                         for (User user : User.getUsersList()) {
-                            System.out.printf("%-15s%-15s%-15s\n", user.getUserID(), user.getUserName(), user.getBalance());
-                        } 
-                        break;
-                    default:
-                        System.out.println("Invalid option.");
+                            if (user.getUserID().equals(userID)) {
+                                reqUser = user;
+                            }
+                        }
+                        reqUser.showAllBalances();
+                    } else {
+                        System.out.println("Invalid User ID.");
+                    }
+                    break;
+                case 2:
+                    System.out.printf("%-15s%-15s%-15s\n", "UserID", "Username", "Balance");
+                    for (User user : User.getUsersList()) {
+                        System.out.printf("%-15s%-15s%-15s\n", user.getUserID(), user.getUserName(), user.getBalance());
+                    }
+                    break;
+                default:
+                    System.out.println("Invalid option.");
                 }
                 break;
             case 6:
@@ -115,7 +164,7 @@ class Main {
                     }
 
                     System.out.printf("Are you sure you want to remove %s? (Y/N)\n", usr.getUserName());
-                    
+
                     String yesNo = sc.next();
                     if (yesNo.equalsIgnoreCase("y")) {
                         User.removeUser(userID);
@@ -242,7 +291,6 @@ class User {
                 break;
             }
         }
-        
 
         // Removing the entries for that user in others' HashMaps
         for (Map.Entry<String, LinkedHashMap<String, Double>> hashMapEntry : TransactionManager.balances.entrySet()) {
