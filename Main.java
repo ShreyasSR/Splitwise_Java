@@ -42,7 +42,25 @@ class User {
     }
 
     double getBalance() {
+        balance = 0.0;
+        for (String user : TransactionManager.balances.keySet()) {
+            balance += TransactionManager.balances.get(userID).get(user);
+        }
         return balance;
+    }
+
+    void showAllBalances() {
+        for (String user : TransactionManager.balances.keySet()) {
+            double balAmt = TransactionManager.balances.get(userID).get(user);
+            if (balAmt > 0) {
+                System.out.printf("User %s owes %s an amount of %d \n", user, userID, balAmt);
+            } else if (balAmt < 0) {
+                System.out.printf("User %s owes %s an amount of %d \n", userID, user, balAmt);
+            } else {
+                System.out.printf("User %s and %s are settled up \n", userID, user);
+            }
+
+        }
     }
 
     static ArrayList<User> getUsersList() {
@@ -149,6 +167,9 @@ class TransactionManager {
 
             balances.get(owedUserID).put(paidUserID, newOwedAmount);
             balances.get(paidUserID).put(owedUserID, newLentAmount);
+
+            // Updating CSV
+            CSVWriter.writeCSV("Balances.csv");
         }
     }
 
