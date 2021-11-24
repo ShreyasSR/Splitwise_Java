@@ -3,17 +3,15 @@ import java.util.*;
 
 class Main {
     public static void main(String args[]) throws IOException {
-        System.out.println("Hello");
-
         CSVReader.readCSV("balances.csv");
+        // Menu
 
-        System.out.println(TransactionManager.balances.get("UserA").get("UserC"));
-
-        for (User user : User.getUsersList()) {
-            System.out.println("UserID : " + user.getUserID() + " ; UserName : " + user.getUserName());
-        }
-
-        CSVWriter.writeCSV("balances.csv");
+        // List Users
+        // Add Users
+        // Create Expense
+        // Settle Balance
+        // Show Balances
+        // Remove Users
 
     }
 }
