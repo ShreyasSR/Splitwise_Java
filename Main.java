@@ -5,7 +5,6 @@ class Main {
     public static void main(String args[]) throws IOException {
         Scanner sc = new Scanner(System.in);
         CSVReader.readCSV("balances.csv");
-        Scanner sc = new Scanner(System.in);
 
         // Menu
         Boolean exit = false;
