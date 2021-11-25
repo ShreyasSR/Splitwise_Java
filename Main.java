@@ -56,9 +56,18 @@ class Main {
                 ArrayList<String> owedUsersList = new ArrayList<>();
                 System.out.print("Enter the number of users who will split: ");
                 int n = sc.nextInt();
-                System.out.println("Enter their user ID(s) (space separated)");
+                System.out.println("Enter their user ID(s) (new line separated): ");
                 for (int i = 0; i < n; i++) {
-                    owedUsersList.add(sc.next());
+                    String userID = sc.next();
+                    // Checking if a valid user ID is entered
+                    if (TransactionManager.balances.keySet().contains(userID)) {
+                        owedUsersList.add(sc.next());
+                        System.out.printf("Succesfully added %d users !", (i + 1));
+                    } else {
+                        System.out.println("Invalid user ID, enter again !");
+                        i -= 1;
+                    }
+
                 }
                 String type = "";
                 System.out.println("Enter the type of split:");
@@ -282,7 +291,12 @@ class User {
     }
 
     private static String generateUserID() {
-        int lastExistingID = Integer.parseInt(usersList.get(usersList.size() - 1).getUserID());
+        int lastExistingID = 0;
+        if (usersList.size() == 0) {
+            lastExistingID = 0;
+        } else {
+            lastExistingID = Integer.parseInt(usersList.get(usersList.size() - 1).getUserID());
+        }
         int newUserID = lastExistingID + 1;
         return String.format("%05d", newUserID);
     }
