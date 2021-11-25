@@ -61,8 +61,8 @@ class Main {
                     String userID = sc.next();
                     // Checking if a valid user ID is entered
                     if (TransactionManager.balances.keySet().contains(userID)) {
-                        owedUsersList.add(sc.next());
-                        System.out.printf("Succesfully added %d users !", (i + 1));
+                        owedUsersList.add(userID);
+                        System.out.printf("Succesfully added %d users !\n", (i + 1));
                     } else {
                         System.out.println("Invalid user ID, enter again !");
                         i -= 1;
@@ -405,8 +405,8 @@ class TransactionManager {
             double newLentAmount = -newOwedAmount;
 
             balances.get(owedUserID).put(paidUserID, newOwedAmount);
-            balances.get(paidUserID).put(owedUserID, newLentAmount);            
-            
+            balances.get(paidUserID).put(owedUserID, newLentAmount);
+
         }
         // Updating CSV
         CSVWriter.writeCSV("Balances.csv");
