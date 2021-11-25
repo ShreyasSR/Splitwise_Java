@@ -4,11 +4,16 @@ import java.util.*;
 class Main {
     public static void main(String args[]) throws IOException {
         Scanner sc = new Scanner(System.in);
-        CSVReader.readCSV("balances.csv");
+        CSVReader.readCSV("Balances.csv");
 
         // Menu
         Boolean exit = false;
         while (!exit) {
+
+            // Clearing screen
+            System.out.print("\033[H\033[2J");
+            System.out.flush();
+
             System.out.println("Main Menu:");
             System.out.println("1. List Users");
             System.out.println("2. Add Users");
@@ -25,6 +30,7 @@ class Main {
                     break;
                 } catch (InputMismatchException err) {
                     System.out.println("Please enter a valid option.");
+                    sc.nextLine();
                 }
             }
 
@@ -43,12 +49,12 @@ class Main {
                 System.out.printf("New User - %s - created with User ID %s\n", newUserName, newUserID);
                 break;
             case 3:
-                System.out.println("Enter the user ID (of person who paid):");
-                String paidUserID = sc.nextLine();
-                System.out.println("Enter the amount: ");
+                System.out.print("Enter the user ID (of person who paid): ");
+                String paidUserID = sc.next();
+                System.out.print("Enter the amount: ");
                 double amount = sc.nextDouble();
                 ArrayList<String> owedUsersList = new ArrayList<>();
-                System.out.println("Enter the number of users who will split:");
+                System.out.print("Enter the number of users who will split: ");
                 int n = sc.nextInt();
                 System.out.println("Enter their user ID(s) (new line separated): ");
                 for (int i = 0; i < n; i++) {
@@ -65,9 +71,9 @@ class Main {
                 }
                 String type = "";
                 System.out.println("Enter the type of split:");
-                System.out.println("\1 for equal");
-                System.out.println("\2 for exact");
-                System.out.println("\3 for percentage");
+                System.out.println("\t1 for equal");
+                System.out.println("\t2 for exact");
+                System.out.println("\t3 for percentage");
                 char ch = sc.next().charAt(0);
                 ArrayList<Double> values = new ArrayList<Double>();
 
@@ -99,7 +105,7 @@ class Main {
                     if (totPercent == 100.0) {
                         type = "percent";
                     } else {
-                        System.out.println("Invalid percentages entered !");
+                        System.out.println("Invalid percentages entered!");
                         type = "";
                     }
                     break;
@@ -107,6 +113,7 @@ class Main {
                 }
 
                 Split sp = new Split(paidUserID, amount, owedUsersList, type, values);
+
                 TransactionManager.updateBalances(sp);
                 break;
             case 4:
@@ -199,6 +206,15 @@ class Main {
                 break;
 
             }
+            if (!exit) {
+                System.out.println();
+                System.out.println("Do you want to return to Main Menu? (Y/N)");
+
+                String yesNo = sc.next();
+                if (yesNo.equalsIgnoreCase("n")) {
+                    exit = true;
+                }
+            }
         }
 
         sc.close();
@@ -289,7 +305,6 @@ class User {
         User userObj = new User(userID);
         userObj.setBalance(0.0);
         userObj.setUserName(userName);
-        usersList.add(userObj);
 
         TransactionManager.newUser(userID);
         CSVWriter.writeCSV("Balances.csv");
@@ -340,21 +355,22 @@ class Split {
 
     Split(String paidUserID, double amount, ArrayList<String> owedUsers, String type, ArrayList<Double> values) {
         this.paidUserID = paidUserID;
+        userSplit = new LinkedHashMap<>();
         if (type.equalsIgnoreCase("exact")) {
             for (int i = 0; i < owedUsers.size(); i++) {
-                userSplit.put(owedUsers.get(i), -values.get(i));
+                userSplit.put(owedUsers.get(i), values.get(i));
             }
         } else if (type.equalsIgnoreCase("percent")) {
             for (int i = 0; i < owedUsers.size(); i++) {
-                userSplit.put(owedUsers.get(i), -amount * values.get(i) / 100);
+                userSplit.put(owedUsers.get(i), amount * values.get(i) / 100);
             }
 
         } else if (type.equalsIgnoreCase("equal")) {
             for (int i = 0; i < owedUsers.size(); i++) {
-                userSplit.put(owedUsers.get(i), -amount / owedUsers.size());
+                userSplit.put(owedUsers.get(i), amount / owedUsers.size());
             }
         } else {
-            System.out.println("Invalid split type, no changes made !");
+            System.out.println("Invalid split type, no changes made!");
         }
     }
 
@@ -380,15 +396,20 @@ class TransactionManager {
             // amount owed
             String owedUserID = splitEntry.getKey();
             double owedAmount = splitEntry.getValue();
+
+            if (owedUserID.equals(paidUserID)) {
+                continue;
+            }
+
             double newOwedAmount = balances.get(owedUserID).get(paidUserID) - owedAmount;
             double newLentAmount = -newOwedAmount;
 
             balances.get(owedUserID).put(paidUserID, newOwedAmount);
-            balances.get(paidUserID).put(owedUserID, newLentAmount);
-
-            // Updating CSV
-            CSVWriter.writeCSV("Balances.csv");
+            balances.get(paidUserID).put(owedUserID, newLentAmount);            
+            
         }
+        // Updating CSV
+        CSVWriter.writeCSV("Balances.csv");
     }
 
     static void newUser(String userID) {
@@ -419,10 +440,8 @@ class CSVReader {
     }
 
     static void readCSV(String fname) throws IOException {
-        // Checking if fileReader has been already instantiated or not
-        if (fileReader == null) {
-            instantiateReader(fname);
-        }
+        // Instantiating the fileReader
+        instantiateReader(fname);
 
         LinkedHashMap<String, LinkedHashMap<String, Double>> balanceMap = new LinkedHashMap<>();
 
@@ -474,10 +493,8 @@ class CSVWriter {
     }
 
     static void writeCSV(String fname) {
-        // Checking if fileWriter has been already instantiated or not
-        if (fileWriter == null) {
-            instantiateWriter(fname);
-        }
+        // Instantiating the fileWriter
+        instantiateWriter(fname);
 
         // Write the header to the CSV file
         Set<String> keys = TransactionManager.balances.keySet();
@@ -502,7 +519,8 @@ class CSVWriter {
 
             LinkedHashMap<String, Double> userBalanceMap = balanceEntry.getValue();
             for (Map.Entry<String, Double> balance : userBalanceMap.entrySet()) {
-                fileWriter.printf(",%f", balance.getValue());
+                double bal = balance.getValue();
+                fileWriter.printf(",%f", bal);
             }
 
             fileWriter.printf("\n");
