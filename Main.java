@@ -51,6 +51,10 @@ class Main {
             case 3:
                 System.out.print("Enter the user ID (of person who paid): ");
                 String paidUserID = sc.next();
+                if (TransactionManager.balances.keySet().contains(paidUserID) == false) {
+                    System.out.println("Invalid user ID !");
+                    break;
+                }
                 System.out.print("Enter the amount: ");
                 double amount = sc.nextDouble();
                 ArrayList<String> owedUsersList = new ArrayList<>();
