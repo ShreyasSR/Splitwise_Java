@@ -88,11 +88,11 @@ class Main {
                         values.add(sc.nextDouble());
                         totAmount += values.get(i);
                     }
-                    if (totAmount == amount) {
+                    if (((totAmount - amount) < 0.01) && ((totAmount - amount) > -0.01)) {
                         type = "exact";
                     } else {
-                        System.out.println("Inconsistent amounts entered !");
-                        type = "";
+                        System.out.println("The amounts don't total to the earlier amount input!");
+                        type = "failed";
                     }
                     break;
                 case '3':
@@ -102,19 +102,20 @@ class Main {
                         values.add(sc.nextDouble());
                         totPercent += values.get(i);
                     }
-                    if (totPercent == 100.0) {
+                    if (((totPercent - 100.0) < 0.01) && ((totPercent - 100.0) > -0.01)) {
                         type = "percent";
                     } else {
-                        System.out.println("Invalid percentages entered!");
-                        type = "";
+                        System.out.println("Invalid percentages entered! (Total is not 100%)");
+                        type = "failed";
                     }
                     break;
 
                 }
 
-                Split sp = new Split(paidUserID, amount, owedUsersList, type, values);
-
-                TransactionManager.updateBalances(sp);
+                if (!type.equals("failed")) {
+                    Split sp = new Split(paidUserID, amount, owedUsersList, type, values);
+                    TransactionManager.updateBalances(sp);
+                }
                 break;
             case 4:
                 System.out.println("Enter the User IDs of the two people who are settling their balance:");
@@ -381,8 +382,7 @@ class TransactionManager {
     // store all balances
     static LinkedHashMap<String, LinkedHashMap<String, Double>> balances;
 
-    // addTransaction(Split) //update "balances"
-
+    // Setter for balances
     static void setBalances(LinkedHashMap<String, LinkedHashMap<String, Double>> balances) {
         TransactionManager.balances = balances;
     }
