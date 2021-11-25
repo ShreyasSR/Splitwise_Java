@@ -426,10 +426,8 @@ class CSVReader {
     }
 
     static void readCSV(String fname) throws IOException {
-        // Checking if fileReader has been already instantiated or not
-        if (fileReader == null) {
-            instantiateReader(fname);
-        }
+        // Instantiating the fileReader
+        instantiateReader(fname);
 
         LinkedHashMap<String, LinkedHashMap<String, Double>> balanceMap = new LinkedHashMap<>();
 
@@ -481,10 +479,8 @@ class CSVWriter {
     }
 
     static void writeCSV(String fname) {
-        // Checking if fileWriter has been already instantiated or not
-        if (fileWriter == null) {
-            instantiateWriter(fname);
-        }
+        // Instantiating the fileWriter
+        instantiateWriter(fname);
 
         // Write the header to the CSV file
         Set<String> keys = TransactionManager.balances.keySet();
